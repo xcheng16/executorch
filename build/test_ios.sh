@@ -82,14 +82,6 @@ say "Installing MPS Backend Requirements"
 
 ./backends/apple/mps/install_requirements.sh
 
-say "Installing Python Bindings"
-
-EXECUTORCH_BUILD_PYBIND=ON \
-BUCK="$(pwd)/$BUCK2" \
-CMAKE_ARGS="-DEXECUTORCH_BUILD_COREML=ON -DEXECUTORCH_BUILD_MPS=ON -DEXECUTORCH_BUILD_XNNPACK=ON" \
-CMAKE_BUILD_PARALLEL_LEVEL=9 \
-pip install . --no-build-isolation -v
-
 say "Exporting Models"
 
 python3 -m examples.portable.scripts.export --model_name="$MODEL_NAME"
@@ -120,3 +112,14 @@ xcodebuild test \
   -project "$APP_PATH.xcodeproj" \
   -scheme MobileNetClassifierTest \
   -destination name="$SIMULATOR_NAME"
+
+say "Installing Python Bindings"
+
+# Ensure that the pybindings build works on macOS. TODO(shoumikhin): Make this a
+# separate test to clarify that it's not required for the rest of the script.
+# Until then, make this the last step so that nothing can depend on it.
+EXECUTORCH_BUILD_PYBIND=ON \
+BUCK="$(pwd)/$BUCK2" \
+CMAKE_ARGS="-DEXECUTORCH_BUILD_COREML=ON -DEXECUTORCH_BUILD_MPS=ON -DEXECUTORCH_BUILD_XNNPACK=ON" \
+CMAKE_BUILD_PARALLEL_LEVEL=9 \
+pip install . --no-build-isolation -v
